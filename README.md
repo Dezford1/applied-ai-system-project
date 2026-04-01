@@ -52,3 +52,24 @@ Recent scheduling upgrades include:
 - Auto-generation of the next recurring task instance when a recurring task is completed
 - Lightweight conflict detection that reports warnings instead of crashing
 - Budget-aware planning that returns both scheduled tasks and unscheduled tasks with reasons
+
+## Testing PawPal+
+
+Run the automated tests with:
+
+```bash
+python -m pytest
+```
+
+Current tests cover core scheduler reliability, including:
+
+- Task completion behavior
+- Task addition to a pet
+- Daily recurrence rollover (completing a daily task creates the next day task)
+- Weekly recurrence rollover
+- Chronological sorting correctness
+- Conflict detection for duplicate/overlapping time windows
+
+Confidence Level: 4/5 stars
+
+Why 4/5: all current tests are passing, but the suite is still small and can be expanded with additional edge cases (for example, no-task pets, boundary time windows, and budget-limit scenarios).
