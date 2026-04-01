@@ -2,7 +2,7 @@
 
 ## 📸 Demo
 
-<a href="/course_images/ai110/demopic.png" target="_blank"><img src='/course_images/ai110/demopic.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
+<a href="demopic.png" target="_blank"><img src='demopic.png' title='PawPal App' alt='PawPal App' class='center-block' /></a>
 
 You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
 
