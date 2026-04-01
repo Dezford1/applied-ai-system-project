@@ -1,6 +1,32 @@
 import streamlit as st
 from pawpal_system import Owner, Pet, Task, Scheduler
 
+
+def format_time_window(task: Task) -> str:
+    """Return a user-friendly time window string for a task."""
+    if not task.time_window:
+        return "N/A"
+    start, end = task.time_window
+    return f"{start//60:02d}:{start%60:02d}-{end//60:02d}:{end%60:02d}"
+
+
+def tasks_to_rows(task_items):
+    """Convert (pet, task) tuples into table-friendly dict rows."""
+    rows = []
+    for pet, task in task_items:
+        rows.append(
+            {
+                "Pet": pet.name,
+                "Task": task.name,
+                "Type": task.type,
+                "Duration (min)": task.duration,
+                "Priority": task.priority,
+                "Time": format_time_window(task),
+                "Completed": "Yes" if task.completed else "No",
+            }
+        )
+    return rows
+
 # ------------------------
 # Persistent Owner in session_state
 # ------------------------
@@ -128,25 +154,71 @@ if owner.pets:
         task_type_input = st.selectbox("Type", ["feeding", "walk", "medication", "grooming", "enrichment"])
         duration_input = st.number_input("Duration (minutes)", min_value=1, value=10)
         priority_input = st.number_input("Priority (1=high)", min_value=1, max_value=5, value=1)
+        has_time_window = st.checkbox("Set time window", value=False)
+
+        if has_time_window:
+            start_hour = st.number_input("Start hour (0-23)", min_value=0, max_value=23, value=8)
+            start_minute = st.number_input("Start minute (0-59)", min_value=0, max_value=59, value=0)
+            end_hour = st.number_input("End hour (0-23)", min_value=0, max_value=23, value=9)
+            end_minute = st.number_input("End minute (0-59)", min_value=0, max_value=59, value=0)
         submitted_task = st.form_submit_button("Add Task")
 
         if submitted_task and task_name_input:
-            new_task = Task(task_name_input, task_type_input, duration_input, priority_input)
+            time_window = None
+            if has_time_window:
+                start_total = int(start_hour) * 60 + int(start_minute)
+                end_total = int(end_hour) * 60 + int(end_minute)
+
+                if end_total <= start_total:
+                    st.error("Time window must end after it starts.")
+                    st.stop()
+
+                time_window = (start_total, end_total)
+
+            new_task = Task(
+                task_name_input,
+                task_type_input,
+                int(duration_input),
+                int(priority_input),
+                time_window=time_window,
+            )
             selected_pet.add_task(new_task)
             st.success(f"Added task '{task_name_input}' to {selected_pet.name}")
 
 # ------------------------
-# Display Current Tasks by Pet
+# Display Current Tasks
 # ------------------------
-st.subheader("Current Tasks by Pet")
-for pet in owner.pets:
-    if pet.tasks:
-        st.write(f"**{pet.name}'s Tasks:**")
-        for task in pet.tasks:
-            status = "✅" if task.completed else "❌"
-            st.write(f"{status} {task.name} ({task.task_type}, {task.duration} min, priority {task.priority})")
+st.subheader("Current Tasks")
+all_tasks = scheduler.get_all_tasks(owner)
+
+if all_tasks:
+    selected_filter_pet = st.selectbox(
+        "Filter by pet",
+        ["All pets"] + [pet.name for pet in owner.pets],
+    )
+    selected_filter_status = st.selectbox(
+        "Filter by status",
+        ["All", "Incomplete", "Completed"],
+    )
+
+    filter_pet = None if selected_filter_pet == "All pets" else selected_filter_pet
+    if selected_filter_status == "Incomplete":
+        filter_completed = False
+    elif selected_filter_status == "Completed":
+        filter_completed = True
     else:
-        st.write(f"{pet.name} has no tasks yet.")
+        filter_completed = None
+
+    filtered_tasks = scheduler.filter_tasks(
+        all_tasks,
+        pet_name=filter_pet,
+        completed=filter_completed,
+    )
+    sorted_filtered_tasks = scheduler.sort_by_time(filtered_tasks)
+
+    st.table(tasks_to_rows(sorted_filtered_tasks))
+else:
+    st.info("No tasks yet. Add a task to see it here.")
 
 st.divider()
 
@@ -154,14 +226,45 @@ st.divider()
 # Generate Daily Schedule
 # ------------------------
 st.subheader("Build Schedule")
-st.caption("This button should call your scheduling logic once you implement it.")
+daily_budget_minutes = st.number_input(
+    "Daily time budget (minutes)",
+    min_value=1,
+    max_value=1440,
+    value=60,
+)
 
 if st.button("Generate schedule"):
-    plan = scheduler.generate_daily_plan(owner)
-    if plan:
-        st.write("### Scheduled Tasks:")
-        for pet, task in plan:
-            status = "✅" if task.completed else "❌"
-            st.write(f"{status} {pet.name}: {task.name} ({task.task_type}, {task.duration} min, priority {task.priority})")
+    all_tasks = scheduler.get_all_tasks(owner)
+    incomplete_tasks = scheduler.filter_tasks(all_tasks, completed=False)
+
+    conflict_warnings = scheduler.detect_conflict_warnings(incomplete_tasks)
+    for warning in conflict_warnings:
+        st.warning(warning)
+
+    scheduled, unscheduled = scheduler.build_budgeted_plan(
+        incomplete_tasks,
+        int(daily_budget_minutes),
+    )
+
+    if scheduled:
+        st.success(f"Scheduled {len(scheduled)} task(s) for today.")
+        st.table(tasks_to_rows(scheduled))
+        st.caption("Plan explanation")
+        st.text(scheduler.explain_plan(scheduled))
     else:
         st.info("No tasks scheduled for today.")
+
+    if unscheduled:
+        unscheduled_rows = []
+        for pet, task, reason in unscheduled:
+            unscheduled_rows.append(
+                {
+                    "Pet": pet.name,
+                    "Task": task.name,
+                    "Reason": reason,
+                    "Duration (min)": task.duration,
+                    "Priority": task.priority,
+                }
+            )
+        st.warning("Some tasks could not be scheduled.")
+        st.table(unscheduled_rows)

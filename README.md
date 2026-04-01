@@ -1,5 +1,9 @@
 # PawPal+ (Module 2 Project)
 
+## 📸 Demo
+
+![PawPal+ Demo Screenshot](demopic.png)
+
 You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
 
 ## Scenario
@@ -21,6 +25,19 @@ Your final app should:
 - Generate a daily schedule/plan based on constraints and priorities
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
+
+## Features
+
+- Multi-pet task management: tracks multiple pets per owner, each with independent task lists.
+- Sorting by time with deterministic tie-breakers: orders tasks by earliest start time, then priority, shorter duration, and task name for stable output.
+- Filtering pipeline: filters tasks by pet name and completion status before planning or display.
+- Conflict detection (time-window overlap): checks pairwise overlap using interval logic and returns readable conflict warnings instead of stopping execution.
+- Daily and weekly recurrence: supports recurring tasks and due-day checks for one-off, daily, and weekly schedules.
+- Recurrence rollover after completion: marking a recurring task complete automatically spawns the next task instance with the correct next occurrence day.
+- Budget-aware greedy planning: builds a daily plan that respects total time budget and skips tasks that exceed budget or conflict with already scheduled tasks.
+- Unscheduled reason reporting: records why tasks were skipped (for example, over budget or conflicting with another task).
+- Human-readable plan explanation: produces plain-language schedule summaries with time window, priority, and duration.
+- Professional Streamlit schedule view: displays sorted and filtered task tables, schedule success messages, and conflict warnings using Streamlit components.
 
 ## Getting started
 
