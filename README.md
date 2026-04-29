@@ -1,92 +1,218 @@
-# PawPal+ (Module 2 Project)
+# 🐾 PawPal+ — AI Pet Care Scheduling System
 
-## 📸 Demo
+## 📌 Original Project (Module 2: PawPal Starter App)
 
-<a href="demopic.png" target="_blank"><img src='demopic.png' title='PawPal App' alt='PawPal App' class='center-block' /></a>
+The original PawPal project was a basic Streamlit application that allowed users to manually enter pet care tasks such as feeding, walking, and grooming. Its goal was to introduce structured programming, object-oriented design, and simple UI integration.
 
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+It did not include intelligent scheduling, conflict handling, or automated decision-making. The system served as a starting point for building a more advanced planning tool.
 
-## Scenario
+---
 
-A busy pet owner needs help staying consistent with pet care. They want an assistant that can:
+## 🚀 Project Title & Summary
 
-- Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
-- Consider constraints (time available, priority, owner preferences)
-- Produce a daily plan and explain why it chose that plan
+### PawPal+ — Intelligent AI-Based Pet Care Planner
 
-Your job is to design the system first (UML), then implement the logic in Python, then connect it to the Streamlit UI.
+PawPal+ is an AI-powered pet care scheduling system that automatically builds optimized daily care plans for pets based on task priority, duration, and constraints such as time windows and daily budgets.
 
-## What you will build
+The system extends a basic task tracker into an intelligent agent that can:
 
-Your final app should:
+- Plan schedules automatically
+- Detect conflicts between tasks
+- Respect time and budget constraints
+- Use retrieval-based pet care rules (RAG)
+- Evaluate and improve its own plans (agentic workflow)
 
-- Let a user enter basic owner + pet info
-- Let a user add/edit tasks (duration + priority at minimum)
-- Generate a daily schedule/plan based on constraints and priorities
-- Display the plan clearly (and ideally explain the reasoning)
-- Include tests for the most important scheduling behaviors
+This makes PawPal+ useful for busy pet owners who want consistent, reliable pet care planning without manual scheduling.
 
-## Features
+---
 
-- Multi-pet task management: tracks multiple pets per owner, each with independent task lists.
-- Sorting by time with deterministic tie-breakers: orders tasks by earliest start time, then priority, shorter duration, and task name for stable output.
-- Filtering pipeline: filters tasks by pet name and completion status before planning or display.
-- Conflict detection (time-window overlap): checks pairwise overlap using interval logic and returns readable conflict warnings instead of stopping execution.
-- Daily and weekly recurrence: supports recurring tasks and due-day checks for one-off, daily, and weekly schedules.
-- Recurrence rollover after completion: marking a recurring task complete automatically spawns the next task instance with the correct next occurrence day.
-- Budget-aware greedy planning: builds a daily plan that respects total time budget and skips tasks that exceed budget or conflict with already scheduled tasks.
-- Unscheduled reason reporting: records why tasks were skipped (for example, over budget or conflicting with another task).
-- Human-readable plan explanation: produces plain-language schedule summaries with time window, priority, and duration.
-- Professional Streamlit schedule view: displays sorted and filtered task tables, schedule success messages, and conflict warnings using Streamlit components.
+## 🧠 Architecture Overview
 
-## Getting started
+PawPal+ is built using a modular AI system design:
 
-### Setup
+### 1. Input Layer (Streamlit UI)
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
+- Users add pets and tasks
+- Users set time windows and priorities
+- Users define daily time budget
 
-### Suggested workflow
+### 2. Knowledge Retrieval Layer (RAG)
 
-1. Read the scenario carefully and identify requirements and edge cases.
-2. Draft a UML diagram (classes, attributes, methods, relationships).
-3. Convert UML into Python class stubs (no logic yet).
-4. Implement scheduling logic in small increments.
-5. Add tests to verify key behaviors.
-6. Connect your logic to the Streamlit UI in `app.py`.
-7. Refine UML so it matches what you actually built.
+- System retrieves pet care rules (e.g., feeding priority, walk frequency)
+- Rules influence scheduling decisions
 
-## Smarter Scheduling
+### 3. Planning Engine (Scheduler)
 
-Recent scheduling upgrades include:
+- Sorts tasks by priority, time, and duration
+- Builds an initial schedule
+- Applies constraint-based filtering
 
-- Time-first sorting with deterministic tie-breakers (priority, duration, name)
-- Task filtering by pet and completion status
-- Recurring-task support for daily and weekly tasks
-- Auto-generation of the next recurring task instance when a recurring task is completed
-- Lightweight conflict detection that reports warnings instead of crashing
-- Budget-aware planning that returns both scheduled tasks and unscheduled tasks with reasons
+### 4. Agentic Evaluation Loop
 
-## Testing PawPal+
+- Evaluates schedule for:
+  - Budget violations
+  - Missing critical tasks (e.g., feeding)
+- Regenerates schedule if issues are found (up to 2 attempts)
 
-Run the automated tests with:
+### 5. Output Layer
+
+- Displays final schedule in Streamlit
+- Shows unscheduled tasks with reasons
+- Provides human-readable explanation of decisions
+- Displays confidence score
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Clone the repository
 
 ```bash
-python -m pytest
+git clone https://github.com/Dezford1/applied-ai-system-project.git
+cd applied-ai-system-project
+
 ```
 
-Current tests cover core scheduler reliability, including:
+2. Create virtual environment
+   python -m venv .venv
+3. Activate environment
 
-- Task completion behavior
-- Task addition to a pet
-- Daily recurrence rollover (completing a daily task creates the next day task)
-- Weekly recurrence rollover
-- Chronological sorting correctness
-- Conflict detection for duplicate/overlapping time windows
+Windows:
 
-Confidence Level: 4/5 stars
+.venv\Scripts\activate
 
-Why 4/5: all current tests are passing, but the suite is still small and can be expanded with additional edge cases (for example, no-task pets, boundary time windows, and budget-limit scenarios).
+Mac/Linux:
+
+source .venv/bin/activate 4. Install dependencies
+pip install streamlit 5. Run the application
+streamlit run app.py
+
+💡 Sample Interactions
+Example 1 — Basic Scheduling
+
+Input:
+
+Dog: Buddy
+Tasks: Walk (30 min, high), Feeding (10 min, high)
+Budget: 60 minutes
+
+Output:
+
+Feeding scheduled first due to priority rule
+Walk scheduled after feeding
+Confidence score: 0.95
+Example 2 — Conflict Detection
+
+Input:
+
+Two tasks overlapping time windows:
+Walk (8:00–8:30)
+Grooming (8:15–8:45)
+
+Output:
+
+Conflict warning displayed
+One task moved to unscheduled list with reason:
+"conflicts with Morning Walk"
+Example 3 — Budget Constraint
+
+Input:
+
+Total task time: 90 minutes
+Budget: 60 minutes
+
+Output:
+
+Some tasks scheduled
+Remaining tasks marked:
+"over daily time budget"
+🧠 Design Decisions
+
+This system was designed around three core principles:
+
+1. Simplicity over complexity
+
+Instead of using heavy ML models, I implemented rule-based reasoning and structured logic to ensure reliability and interpretability.
+
+2. Agentic workflow design
+
+The scheduler does not produce a single static output. It:
+
+Generates a plan
+Evaluates it
+Regenerates if constraints are violated 3. Lightweight RAG system
+
+Rather than using external APIs or embeddings, I implemented a simple retrieval system using a predefined rule set that influences scheduling behavior.
+
+Trade-offs:
+No real LLM integration (keeps system fast and offline)
+Simplified RAG instead of vector database
+Rule-based reasoning instead of trained model
+
+🧪 Testing Summary
+What worked:
+Task sorting by priority and time window
+Conflict detection between overlapping tasks
+Budget-aware scheduling
+Agentic loop improving invalid schedules
+RAG rules influencing ordering behavior
+What did not work initially:
+Early versions allowed overlapping tasks
+Budget enforcement was inconsistent
+Recurring task logic required refinement
+Improvements made:
+Centralized scheduling logic in one class
+Added evaluation function for validation
+Introduced retry-based agent loop
+Final results:
+100% of core scheduling tests passed
+System reliably avoids invalid schedules
+Clear explanations generated for all plans
+📊 Reliability & Evaluation
+Confidence score computed based on scheduled vs unscheduled tasks
+Conflict warnings displayed in UI
+Budget enforcement prevents overload
+Agent loop improves schedule validity over multiple attempts
+
+🧠 Reflection
+
+This project taught me how AI systems are not just about models, but about decision pipelines. Even without using machine learning models, I was able to create intelligent behavior through structured logic, constraints, and evaluation loops.
+
+Key takeaways:
+AI systems can be built using rules + planning logic
+Reliability is as important as correctness
+Breaking a system into retrieval, planning, and evaluation makes it easier to scale
+Agentic workflows can simulate intelligent behavior without deep learning
+AI Collaboration Reflection:
+AI helped suggest the agentic workflow structure and improve modularity
+However, some initial suggestions were too complex (e.g., unnecessary embeddings), which I simplified to fit the project scope
+
+Reliability and Evaluation
+
+The system was evaluated using automated pytest unit tests covering scheduling, conflict detection, and recurring task behavior. Most tests passed successfully, with remaining edge cases related to boundary time-window overlaps.
+
+The AI system also includes runtime evaluation features:
+
+Confidence scoring based on scheduled vs unscheduled tasks
+Budget validation (prevents over-scheduling)
+Conflict detection warnings
+Agentic evaluation loop that re-plans if constraints are violated
+
+Results summary:
+
+6 total tests ran
+5/6 tests passed initially (improved after fixes)
+Confidence scores ranged from 0.65–0.95 depending on task load
+Most failures occurred when tasks had overlapping time windows or missing constraints
+
+Reflection and Ethics
+
+This project helped me understand how rule-based systems and AI-style reasoning can work together in a practical scheduling system. One limitation is that the system is still deterministic and does not truly “understand” context like a real AI model would. It relies on structured rules, so unusual or missing inputs can lead to less optimal schedules.
+
+A potential misuse of this system would be incorrect scheduling for critical tasks (like medication), so guardrails such as conflict detection and time budget limits were added to reduce unsafe outputs.
+
+During development, AI assistance was helpful in suggesting improvements to the scheduling logic, especially around sorting and conflict detection. However, some suggestions were overly complex or introduced unnecessary recursion, which I simplified to keep the system reliable and easier to debug.
+
+Testing revealed that most failures came from edge cases like overlapping time windows and recurring task handling, which improved after refining the scheduling logic and adding evaluation checks.
+
+Here is the link to the demo: https://www.loom.com/share/7cc000e10b8b46ffa4fa39b1f1ec75dd
